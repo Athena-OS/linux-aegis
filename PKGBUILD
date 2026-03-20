@@ -402,22 +402,27 @@ prepare() {
     if [ "$_aegis_profile" = "hardened" ]; then
         echo "Applying hardened profile security config..."
 
+        #scripts/config \
+        #    -e SECURITY_PERF_EVENTS_RESTRICT \
+        #    -e SECURITY_YAMA \
+        #    -e SECURITY_DMESG_RESTRICT \
+        #    -e MODVERSIONS \
+        #    -e MODULE_SIG \
+        #    -e MODULE_SIG_ALL \
+        #    -e MODULE_SIG_SHA512 \
+        #    -e INTEGRITY \
+        #    -e INTEGRITY_SIGNATURE \
+        #    -e INTEGRITY_ASYMMETRIC_KEYS \
+        #    -e INTEGRITY_PLATFORM_KEYRING \
+        #    -e IMA \
+        #    -e IMA_APPRAISE \
+        #    -e IMA_ARCH_POLICY \
+        #    -e IMA_KEYRINGS_PERMIT_SIGNED_BY_BUILTIN_OR_SECONDARY
+
         scripts/config \
             -e SECURITY_PERF_EVENTS_RESTRICT \
             -e SECURITY_YAMA \
-            -e SECURITY_DMESG_RESTRICT \
-            #-e MODVERSIONS \
-            -e MODULE_SIG \
-            -e MODULE_SIG_ALL \
-            -e MODULE_SIG_SHA512 \
-            -e INTEGRITY \
-            -e INTEGRITY_SIGNATURE \
-            -e INTEGRITY_ASYMMETRIC_KEYS \
-            -e INTEGRITY_PLATFORM_KEYRING \
-            #-e IMA \
-            #-e IMA_APPRAISE \
-            #-e IMA_ARCH_POLICY \
-            #-e IMA_KEYRINGS_PERMIT_SIGNED_BY_BUILTIN_OR_SECONDARY
+            -e SECURITY_DMESG_RESTRICT
 
     else
         echo "Applying offensive profile security config..."
