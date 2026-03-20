@@ -420,9 +420,9 @@ prepare() {
         #    -e IMA_KEYRINGS_PERMIT_SIGNED_BY_BUILTIN_OR_SECONDARY
 
         scripts/config \
-            -e SECURITY_PERF_EVENTS_RESTRICT \
-            -e SECURITY_YAMA \
-            -e SECURITY_DMESG_RESTRICT
+            -e MODULE_SIG \
+            -e MODULE_SIG_ALL \
+            -e MODULE_SIG_SHA512
 
     else
         echo "Applying offensive profile security config..."
