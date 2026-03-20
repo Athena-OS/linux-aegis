@@ -403,17 +403,17 @@ prepare() {
         echo "Applying hardened profile security config..."
 
         scripts/config \
-            #-e SECURITY_PERF_EVENTS_RESTRICT \
-            #-e SECURITY_YAMA \
-            #-e SECURITY_DMESG_RESTRICT \
+            -e SECURITY_PERF_EVENTS_RESTRICT \
+            -e SECURITY_YAMA \
+            -e SECURITY_DMESG_RESTRICT \
             #-e MODVERSIONS \
-            #-e MODULE_SIG \
-            #-e MODULE_SIG_ALL \
-            #-e MODULE_SIG_SHA512 \
-            -e INTEGRITY \
-            -e INTEGRITY_SIGNATURE \
-            -e INTEGRITY_ASYMMETRIC_KEYS \
-            -e INTEGRITY_PLATFORM_KEYRING \
+            -e MODULE_SIG \
+            -e MODULE_SIG_ALL \
+            -e MODULE_SIG_SHA512 \
+            #-e INTEGRITY \
+            #-e INTEGRITY_SIGNATURE \
+            #-e INTEGRITY_ASYMMETRIC_KEYS \
+            #-e INTEGRITY_PLATFORM_KEYRING \
             -e IMA \
             -e IMA_APPRAISE \
             -e IMA_ARCH_POLICY \
