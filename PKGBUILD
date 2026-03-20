@@ -420,10 +420,10 @@ prepare() {
         #    -e IMA_KEYRINGS_PERMIT_SIGNED_BY_BUILTIN_OR_SECONDARY
 
         scripts/config \
-            -e INTEGRITY \
-            -e INTEGRITY_SIGNATURE \
-            -e INTEGRITY_ASYMMETRIC_KEYS \
-            -e INTEGRITY_PLATFORM_KEYRING
+            -e IMA \
+            -e IMA_APPRAISE \
+            -e IMA_ARCH_POLICY \
+            -e IMA_KEYRINGS_PERMIT_SIGNED_BY_BUILTIN_OR_SECONDARY
 
     else
         echo "Applying offensive profile security config..."
