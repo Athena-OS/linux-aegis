@@ -140,7 +140,8 @@ fi
 # Hardened profile: additional security patches
 if [ "$_aegis_profile" = "hardened" ]; then
     source+=(
-        "hardened.patch::https://github.com/anthraxx/linux-hardened/releases/download/v${_major}.${_minor}-hardened1/linux-hardened-v${_major}.${_minor}-hardened1.patch"
+        "${_patchsource}/misc/0001-hardened.patch"
+        #"hardened.patch::https://github.com/anthraxx/linux-hardened/releases/download/v${_major}.${_minor}-hardened1/linux-hardened-v${_major}.${_minor}-hardened1.patch"
         "platform-keyring-module-sig.patch::https://gitlab.com/kalilinux/packages/linux/-/raw/kali/master/debian/patches/features/all/db-mok-keyring/KEYS-Make-use-of-platform-keyring-for-module-signature.patch"
     )
 fi
