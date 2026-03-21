@@ -96,7 +96,7 @@ pkgbase="linux-$_pkgsuffix"
 pkgname=("$pkgbase" "$pkgbase-headers")
 
 _major=6.19
-_minor=8
+_minor=9
 _tagrel=1
 pkgver=${_major}.${_minor}
 pkgrel=1
@@ -140,8 +140,7 @@ fi
 # Hardened profile: additional security patches
 if [ "$_aegis_profile" = "hardened" ]; then
     source+=(
-        #"${_patchsource}/misc/0001-hardened.patch"
-        #"hardened.patch::https://github.com/anthraxx/linux-hardened/releases/download/v${_major}.${_minor}-hardened1/linux-hardened-v${_major}.${_minor}-hardened1.patch"
+        "${_patchsource}/misc/0001-hardened.patch"
         "platform-keyring-module-sig.patch::https://gitlab.com/kalilinux/packages/linux/-/raw/kali/master/debian/patches/features/all/db-mok-keyring/KEYS-Make-use-of-platform-keyring-for-module-signature.patch"
     )
 fi
