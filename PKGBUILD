@@ -140,7 +140,7 @@ fi
 # Hardened profile: additional security patches
 if [ "$_aegis_profile" = "hardened" ]; then
     source+=(
-        "${_patchsource}/misc/0001-hardened.patch"
+        #"${_patchsource}/misc/0001-hardened.patch"
         #"hardened.patch::https://github.com/anthraxx/linux-hardened/releases/download/v${_major}.${_minor}-hardened1/linux-hardened-v${_major}.${_minor}-hardened1.patch"
         "platform-keyring-module-sig.patch::https://gitlab.com/kalilinux/packages/linux/-/raw/kali/master/debian/patches/features/all/db-mok-keyring/KEYS-Make-use-of-platform-keyring-for-module-signature.patch"
     )
@@ -402,22 +402,22 @@ prepare() {
     if [ "$_aegis_profile" = "hardened" ]; then
         echo "Applying hardened profile security config..."
 
-        #scripts/config \
-        #    -e SECURITY_PERF_EVENTS_RESTRICT \
-        #    -e SECURITY_YAMA \
-        #    -e SECURITY_DMESG_RESTRICT \
-        #    -e MODVERSIONS \
-        #    -e MODULE_SIG \
-        #    -e MODULE_SIG_ALL \
-        #    -e MODULE_SIG_SHA512 \
-        #    -e INTEGRITY \
-        #    -e INTEGRITY_SIGNATURE \
-        #    -e INTEGRITY_ASYMMETRIC_KEYS \
-        #    -e INTEGRITY_PLATFORM_KEYRING \
-        #    -e IMA \
-        #    -e IMA_APPRAISE \
-        #    -e IMA_ARCH_POLICY \
-        #    -e IMA_KEYRINGS_PERMIT_SIGNED_BY_BUILTIN_OR_SECONDARY
+        scripts/config \
+            -e SECURITY_PERF_EVENTS_RESTRICT \
+            -e SECURITY_YAMA \
+            -e SECURITY_DMESG_RESTRICT \
+            -e MODVERSIONS \
+            -e MODULE_SIG \
+            -e MODULE_SIG_ALL \
+            -e MODULE_SIG_SHA512 \
+            -e INTEGRITY \
+            -e INTEGRITY_SIGNATURE \
+            -e INTEGRITY_ASYMMETRIC_KEYS \
+            -e INTEGRITY_PLATFORM_KEYRING \
+            -e IMA \
+            -e IMA_APPRAISE \
+            -e IMA_ARCH_POLICY \
+            -e IMA_KEYRINGS_PERMIT_SIGNED_BY_BUILTIN_OR_SECONDARY
 
     else
         echo "Applying offensive profile security config..."
