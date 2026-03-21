@@ -141,7 +141,7 @@ fi
 if [ "$_aegis_profile" = "hardened" ]; then
     source+=(
         "${_patchsource}/misc/0001-hardened.patch"
-        "platform-keyring-module-sig.patch::https://gitlab.com/kalilinux/packages/linux/-/raw/kali/master/debian/patches/features/all/db-mok-keyring/KEYS-Make-use-of-platform-keyring-for-module-signature.patch"
+        #"platform-keyring-module-sig.patch::https://gitlab.com/kalilinux/packages/linux/-/raw/kali/master/debian/patches/features/all/db-mok-keyring/KEYS-Make-use-of-platform-keyring-for-module-signature.patch"
     )
 fi
 
