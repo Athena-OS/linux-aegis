@@ -37,12 +37,8 @@ jobs:
       run: |
         sudo -H -E -u builder makepkg --skipchecksums --syncdeps --noconfirm
 
-    - name: Generate timestamp
-      id: timestamp
-      run: echo "ts=$(date +'%Y-%m-%d-%H_%M')" >> $GITHUB_OUTPUT
-
     - name: Upload artifacts
       uses: actions/upload-artifact@v7
       with:
-        name: linux-aegis-${{ matrix.profile }}-${{ steps.timestamp.outputs.ts }}
+        name: linux-aegis-${{ matrix.profile }}
         path: "*.pkg.tar.zst*"
