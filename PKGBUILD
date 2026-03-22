@@ -118,10 +118,10 @@ makedepends=(
 )
 
 _patchsource="https://raw.githubusercontent.com/cachyos/kernel-patches/master/${_major}"
+_configsource="https://raw.githubusercontent.com/cachyos/linux-cachyos/master" # REMINDER: change "master" to ${_major}
 
 source=(
     "https://github.com/CachyOS/linux/releases/download/${_srctag}/${_srctag}.tar.gz"
-    "config"
     # CachyOS BORE + Cachy sauce scheduler patch
     "${_patchsource}/sched/0001-bore-cachy.patch"
     # Kali WiFi injection patches
@@ -140,8 +140,13 @@ fi
 # Hardened profile: additional security patches
 if [ "$_aegis_profile" = "hardened" ]; then
     source+=(
-        #"${_patchsource}/misc/0001-hardened.patch"
-        #"platform-keyring-module-sig.patch::https://gitlab.com/kalilinux/packages/linux/-/raw/kali/master/debian/patches/features/all/db-mok-keyring/KEYS-Make-use-of-platform-keyring-for-module-signature.patch"
+        "${_patchsource}/misc/0001-hardened.patch"
+        "${_configsource}/linux-cachyos-hardened/config"
+        "platform-keyring-module-sig.patch::https://gitlab.com/kalilinux/packages/linux/-/raw/kali/master/debian/patches/features/all/db-mok-keyring/KEYS-Make-use-of-platform-keyring-for-module-signature.patch"
+    )
+else
+    source+=(
+        "${_configsource}/linux-cachyos-bore/config"
     )
 fi
 
@@ -170,6 +175,7 @@ prepare() {
     done
 
     echo "Setting config..."
+    sed 's/archlinux/athenaos/g'
     cp ../config .config
 
     ### --------------------------------------------------------
@@ -401,22 +407,22 @@ prepare() {
     if [ "$_aegis_profile" = "hardened" ]; then
         echo "Applying hardened profile security config..."
 
-        #scripts/config \
-         #   -e SECURITY_PERF_EVENTS_RESTRICT \
-         #   -e SECURITY_YAMA \
-         #   -e SECURITY_DMESG_RESTRICT \
-         #   -e MODVERSIONS \
-         #   -e MODULE_SIG \
-         #   -e MODULE_SIG_ALL \
-         #   -e MODULE_SIG_SHA512 \
-         #   -e INTEGRITY \
-         #   -e INTEGRITY_SIGNATURE \
-         #   -e INTEGRITY_ASYMMETRIC_KEYS \
-         #   -e INTEGRITY_PLATFORM_KEYRING \
-         #   -e IMA \
-         #   -e IMA_APPRAISE \
-         #   -e IMA_ARCH_POLICY \
-         #   -e IMA_KEYRINGS_PERMIT_SIGNED_BY_BUILTIN_OR_SECONDARY
+        scripts/config \
+            -e SECURITY_PERF_EVENTS_RESTRICT \
+            -e SECURITY_YAMA \
+            -e SECURITY_DMESG_RESTRICT \
+            -e MODVERSIONS \
+            -e MODULE_SIG \
+            -e MODULE_SIG_ALL \
+            -e MODULE_SIG_SHA512 \
+            -e INTEGRITY \
+            -e INTEGRITY_SIGNATURE \
+            -e INTEGRITY_ASYMMETRIC_KEYS \
+            -e INTEGRITY_PLATFORM_KEYRING \
+            -e IMA \
+            -e IMA_APPRAISE \
+            -e IMA_ARCH_POLICY \
+            -e IMA_KEYRINGS_PERMIT_SIGNED_BY_BUILTIN_OR_SECONDARY
 
     else
         echo "Applying offensive profile security config..."
@@ -604,9 +610,9 @@ for _p in "${pkgname[@]}"; do
     }"
 done
 
-b2sums=('c2aa84e0ab473d1b9a92fb42d90eac61f6ab600c6cd3b052978e349dfd66f5140c0ff8d04eadfda4b953d2999a057aa5deb4b4610e0f439b87a62e2edad28ce3'
-        '235a4fa38926d575633dea787c2ceca18c251908bad77f15aae1897cf446bba35f87d090ead292221432298e6e55f8852e1bdfb74425570b7e56a0ad1f312b7c'
-        '452d57751b27c3fee1c402dd4c6102cbbfd85fb054ce52a6e8fc8d1c7c2cc6f2292213dc9c93561552b4755933c04857ba6d8057ad10d2942f7c422dbeddde7a'
+b2sums=('8a7650304ef95ebdba8dca6f161e6e6dc98d8d9edde4d34507e2f69bafa099b656d6334cd57cfc96681c896ed60d8373e19f53b5c58d5b0b67ab43cac92b2b9e'
+        'd22b4d57707bfd94469e006ee6b43f09fc3b52bf41463b8ec33d1de14d71cea7fc8b3df8d5d9db57aacf69711209bc602a7868939e553f4972e0c6753e734333'
         'ba9d775e5c6b504083a1e97ad143facda064840e88df6328c9680ca4100e6c354ac821c320ee01b9896fb9f5e53cc808d4b251f6883d02dd58b4e151160f2730'
         'b227bde0ba8729fa9e50ecaf344d96f1521df120b74188bdef445eaa550bdbbe6313183f9ad0182f12c6079d17d055b38b23d0479f937360fdbd22df794ddbae'
-        'c83386d9456fc27fb360f3b9c2775d36f91678d12c903fe91575927965a32a2202ab001379fdab1710b8152c506496bbdc0e2c5396530f27706cb964dae34c20')
+        'c83386d9456fc27fb360f3b9c2775d36f91678d12c903fe91575927965a32a2202ab001379fdab1710b8152c506496bbdc0e2c5396530f27706cb964dae34c20'
+        'b55556d1ebec83a529359f74e7231d48d85066be80a472591c3e8c8f258050ce3132e277e367f793d0d93896224ec4bd6e0ebf3fdb0ae674b23141d66802dc16')
