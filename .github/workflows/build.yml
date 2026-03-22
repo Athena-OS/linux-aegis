@@ -33,7 +33,8 @@ jobs:
         _aegis_profile: ${{ matrix.profile }}
         _use_llvm_lto: full
         _processor_opt: generic
-        _use_kcfi: ${{ matrix.profile == 'hardened' && 'yes' || 'no' }}
+        #_use_kcfi: ${{ matrix.profile == 'hardened' && 'yes' || 'no' }}
+        _use_kcfi: 'no'
       run: |
         sudo -H -E -u builder makepkg --skipchecksums --syncdeps --noconfirm
 
