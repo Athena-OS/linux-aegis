@@ -393,7 +393,6 @@ prepare() {
         -e SECURITY_APPARMOR_HASH_DEFAULT \
         -e STACKPROTECTOR \
         -e STACKPROTECTOR_STRONG \
-        -e STRICT_DEVMEM \
         -e STRICT_KERNEL_RWX \
         -e STRICT_MODULE_RWX \
         -e FORTIFY_SOURCE \
@@ -429,6 +428,7 @@ prepare() {
         echo "Applying offensive profile security config..."
 
         scripts/config \
+            -e STRICT_DEVMEM \
             -d SECURITY_PERF_EVENTS_RESTRICT \
             -e SECURITY_YAMA \
             -d SECURITY_DMESG_RESTRICT \
