@@ -408,6 +408,7 @@ prepare() {
         echo "Applying hardened profile security config..."
 
         scripts/config \
+            -e IO_STRICT_DEVMEM \
             -e SECURITY_PERF_EVENTS_RESTRICT \
             -e SECURITY_YAMA \
             -e SECURITY_DMESG_RESTRICT \
