@@ -97,7 +97,7 @@ pkgname=("$pkgbase" "$pkgbase-headers")
 
 _major=6.19
 _minor=11
-_tagrel=1
+_tagrel=2
 pkgver=${_major}.${_minor}
 pkgrel=1
 
