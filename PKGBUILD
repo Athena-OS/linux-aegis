@@ -95,11 +95,11 @@ fi
 pkgbase="linux-$_pkgsuffix"
 pkgname=("$pkgbase" "$pkgbase-headers")
 
-_major=6.19
-_minor=12
-_tagrel=2
+_major=7.0
+_minor=2
+_tagrel=1
 pkgver=${_major}.${_minor}
-pkgrel=1
+pkgrel=2
 
 _srctag=cachyos-${_major}.${_minor}-${_tagrel}
 _srcname=${_srctag}
@@ -111,10 +111,9 @@ arch=('x86_64')
 url="https://github.com/Athena-OS/linux-aegis"
 license=('GPL-2.0-only')
 options=('!strip' '!debug' '!lto')
-
 makedepends=(
-    bc cpio gettext libelf pahole perl python
-    rust rust-bindgen rust-src tar xz zstd
+    'bc' 'binutils' 'cpio' 'gettext' 'glibc' 'libelf' 'libgcc' 'openssl' 'pahole' 'perl' 'python'
+    'rust' 'rust-bindgen' 'rust-src' 'tar' 'xxhash' 'xz' 'zlib' 'zstd'
 )
 
 _patchsource="https://raw.githubusercontent.com/cachyos/kernel-patches/master/${_major}"
@@ -132,7 +131,7 @@ source=(
 )
 
 if _is_lto_kernel; then
-    makedepends+=(clang llvm lld)
+    makedepends+=('clang' 'llvm' 'lld')
     source+=("${_patchsource}/misc/dkms-clang.patch")
     BUILD_FLAGS=(CC=clang LD=ld.lld LLVM=1 LLVM_IAS=1)
 fi
@@ -175,7 +174,6 @@ prepare() {
     done
 
     echo "Setting config..."
-    sed 's/archlinux/athenaos/g'
     cp ../config .config
 
     ### --------------------------------------------------------
@@ -304,17 +302,14 @@ prepare() {
     ### --------------------------------------------------------
     case "$_preempt" in
         full)
-            scripts/config -e PREEMPT_DYNAMIC -e PREEMPT \
-                -d PREEMPT_VOLUNTARY -d PREEMPT_LAZY -d PREEMPT_NONE;;
+            scripts/config -d PREEMPT_DYNAMIC -e PREEMPT \
+                -d PREEMPT_LAZY;;
         lazy)
-            scripts/config -e PREEMPT_DYNAMIC -d PREEMPT \
-                -d PREEMPT_VOLUNTARY -e PREEMPT_LAZY -d PREEMPT_NONE;;
-        voluntary)
             scripts/config -d PREEMPT_DYNAMIC -d PREEMPT \
-                -e PREEMPT_VOLUNTARY -d PREEMPT_LAZY -d PREEMPT_NONE;;
-        none)
-            scripts/config -d PREEMPT_DYNAMIC -d PREEMPT \
-                -d PREEMPT_VOLUNTARY -d PREEMPT_LAZY -e PREEMPT_NONE;;
+                -e PREEMPT_LAZY;;
+        dynamic)
+            scripts/config -e PREEMPT_DYNAMIC -e PREEMPT \
+                -d PREEMPT_LAZY;;
         *) _die "Invalid _preempt='$_preempt'";;
     esac
     echo "Preempt: $_preempt"
@@ -522,7 +517,8 @@ _package() {
 
 _package-headers() {
     pkgdesc="Headers and scripts for building modules for the $pkgdesc kernel"
-    depends=('pahole' "${pkgbase}")
+    depends=('binutils' 'glibc' 'libelf' 'libgcc' 'openssl' 'pahole'
+             'xxhash' 'zlib' 'zstd' "${pkgbase}")
     provides=(LINUX-HEADERS)
 
     cd "${_srcname}"
