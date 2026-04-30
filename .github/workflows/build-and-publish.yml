@@ -9,6 +9,7 @@ jobs:
   build:
     name: linux-aegis-${{ matrix.profile }}
     strategy:
+      fail-fast: false
       matrix:
         profile: [offensive, hardened]
     runs-on: ubuntu-latest
