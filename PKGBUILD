@@ -96,10 +96,10 @@ pkgbase="linux-$_pkgsuffix"
 pkgname=("$pkgbase" "$pkgbase-headers")
 
 _major=7.0
-_minor=2
-_tagrel=1
+_minor=10
+_tagrel=2
 pkgver=${_major}.${_minor}
-pkgrel=2
+pkgrel=1
 
 _srctag=cachyos-${_major}.${_minor}-${_tagrel}
 _srcname=${_srctag}
