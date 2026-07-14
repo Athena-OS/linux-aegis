@@ -99,7 +99,7 @@ _major=7.0
 _minor=12
 _tagrel=2
 pkgver=${_major}.${_minor}
-pkgrel=1
+pkgrel=2
 
 _srctag=cachyos-${_major}.${_minor}-${_tagrel}
 _srcname=${_srctag}
