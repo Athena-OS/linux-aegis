@@ -95,11 +95,11 @@ fi
 pkgbase="linux-$_pkgsuffix"
 pkgname=("$pkgbase" "$pkgbase-headers")
 
-_major=7.1
-_minor=8
-_tagrel=1
+_major=7.2
+_minor=9
+_tagrel=2
 pkgver=${_major}.${_minor}
-pkgrel=1
+pkgrel=2
 
 _srctag=cachyos-${_major}.${_minor}-${_tagrel}
 _srcname=${_srctag}
