@@ -128,33 +128,31 @@ source=(
     "carl9170-promisc.patch::https://gitlab.com/kalilinux/packages/linux/-/raw/kali/master/debian/patches/features/all/wireless-carl9170-Enable-sniffer-mode-promisc-flag-t.patch"
     # Intel IOMMU: exclude only iGPU, keep discrete GPU under IOMMU protection
     "intel-iommu-intgpu-off.patch::https://gitlab.com/kalilinux/packages/linux/-/raw/kali/master/debian/patches/features/x86/intel-iommu-add-option-to-exclude-integrated-gpu-only.patch"
+    # Clang/LTO patch (applied in prepare() only for LTO builds)
+    "${_patchsource}/misc/dkms-clang.patch"
+    # Hardened profile security patches (applied only for hardened)
+    "${_patchsource}/misc/0001-hardened.patch"
+    "platform-keyring-module-sig.patch::https://gitlab.com/kalilinux/packages/linux/-/raw/kali/master/debian/patches/features/all/db-mok-keyring/KEYS-Make-use-of-platform-keyring-for-module-signature.patch"
+    # Configs
+    "config-bore::${_configsource}/linux-cachyos-bore/config"
+    "config-hardened::${_configsource}/linux-cachyos-hardened/config"
 )
+
+if _is_lto_kernel; then
+    makedepends+=('clang' 'llvm' 'lld')
+    BUILD_FLAGS=(CC=clang LD=ld.lld LLVM=1 LLVM_IAS=1)
+fi
 
 sha512sums=('2aec067d7a78ce8d64869649f1fe22b9aaac25c38011aae7b666f090b2fdf12356fca01601f928f9fdead421d98de5ef5832b78e264042f70796c0bde816d67e'
             'e8c5193d510af6b17a3a6a965e5a8a1ab35766cd41c561ed3f861570028b6512b7bab93d5de0c950085e9b43650c7d1f827946076bfd5b8ce8de4e1ae9e9d2a2'
             '76c78cafeb920aab33935ac977d8cc9f8f7997096fc80c4e9011da2bc4d419af17f3171f089498172e9903c69ff0a2696641ceb4973bc68bb54c607d6e44a9a8'
             'a096e22f204ae4abc0fb03676b72d12da967548e8b939ad4cd43d71f207d302190d12918e459adfdfea62a83a4abdf033c992a3807ca2da491f755ec304c52d6'
             '8e450ca438d1190257f26cdb2d7f421c85ba69a9470d3be6d5bac7f0a9cfca2695fdcac1c911916406c6048c2517396e611bcd13caad361197bc3c8144677149'
-            'cc57e99e9daea96332b09d034b89dd5de1360936aae1ecb9f81b0dc553b4f5c913d5cecb778b0f652988b2564db9292bf8a7c1074ab3e61872dd75420d6b0db0')
-
-if _is_lto_kernel; then
-    makedepends+=('clang' 'llvm' 'lld')
-    source+=("${_patchsource}/misc/dkms-clang.patch")
-    BUILD_FLAGS=(CC=clang LD=ld.lld LLVM=1 LLVM_IAS=1)
-fi
-
-# Hardened profile: additional security patches
-if [ "$_aegis_profile" = "hardened" ]; then
-    source+=(
-        "${_patchsource}/misc/0001-hardened.patch"
-        "${_configsource}/linux-cachyos-hardened/config"
-        "platform-keyring-module-sig.patch::https://gitlab.com/kalilinux/packages/linux/-/raw/kali/master/debian/patches/features/all/db-mok-keyring/KEYS-Make-use-of-platform-keyring-for-module-signature.patch"
-    )
-else
-    source+=(
-        "${_configsource}/linux-cachyos-bore/config"
-    )
-fi
+            '1273fb6d92b09c07c0dd1393853d7541c9cc371dd107efad814f1d1b60b2715694826e7f7b502793e195da2d205bc2ca2382df6c03b987f54bb627bc8015551f'
+            'be96ac97ae6616e5dc077f91d8d015635ed7fe1b16150f8b7416e8e6d83df6b3c6c6bdefa1402de02b0a54c1dbf05191227b5c6d28bfffd93795db10728a0c98'
+            'c751913df1c04f917917a72480e00b10db67c43dac644f8c6e86b0ce8ecd0995ce5995cdc3408c2e741374a18e5235bd9134dc400399ccf382035cff8fe1a7e8'
+            'cc57e99e9daea96332b09d034b89dd5de1360936aae1ecb9f81b0dc553b4f5c913d5cecb778b0f652988b2564db9292bf8a7c1074ab3e61872dd75420d6b0db0'
+            'd0cbd18c1f21e56960d428367c6383d2001992b2349ce65bf988d908ced8927f8c859cace1095467eeb9f2dfc3abad74c27adb59d578c43f6e22b3b8003c5726')
 
 export KBUILD_BUILD_HOST=athenaos
 export KBUILD_BUILD_USER="$pkgbase"
@@ -169,19 +167,33 @@ prepare() {
     echo "-$pkgrel" > localversion.10-pkgrel
     echo "${pkgbase#linux}" > localversion.20-pkgname
 
-    # Apply all patches in source array order
-    local src
-    for src in "${source[@]}"; do
-        src="${src%%::*}"
-        src="${src##*/}"
-        src="${src%.zst}"
-        [[ $src = *.patch ]] || continue
-        echo "Applying patch $src..."
-        patch -Np1 < "../$src"
+    local _config
+    local -a _patches=(
+        0001-bore-cachy.patch
+        kali-wifi-injection.patch
+        carl9170-promisc.patch
+        intel-iommu-intgpu-off.patch
+    )
+
+    if _is_lto_kernel; then
+        _patches+=(dkms-clang.patch)
+    fi
+
+    if [ "$_aegis_profile" = "hardened" ]; then
+        _patches+=(0001-hardened.patch platform-keyring-module-sig.patch)
+        _config=config-hardened
+    else
+        _config=config-bore
+    fi
+
+    local p
+    for p in "${_patches[@]}"; do
+        echo "Applying patch $p..."
+        patch -Np1 < "../$p"
     done
 
-    echo "Setting config..."
-    cp ../config .config
+    echo "Setting config ($_config)..."
+    cp "../$_config" .config
 
     ### --------------------------------------------------------
     ### CPU optimization
@@ -468,7 +480,7 @@ prepare() {
     echo "Finalizing config..."
     make "${BUILD_FLAGS[@]}" prepare
     yes "" | make "${BUILD_FLAGS[@]}" config >/dev/null
-    diff -u ../config .config || :
+    diff -u "../$_config" .config || :
 
     make -s kernelrelease > version
     echo "Prepared $pkgbase version $(<version)"
@@ -478,7 +490,7 @@ prepare() {
 
     # Save config for later reuse
     local basedir
-    basedir="$(dirname "$(readlink "${srcdir}/config")")"
+    basedir="$(dirname "$(readlink "${srcdir}/${_config}")")"
     cat .config > "${basedir}/config-${pkgver}-${pkgrel}${pkgbase#linux}"
 }
 
