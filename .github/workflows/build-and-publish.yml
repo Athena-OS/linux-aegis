@@ -74,7 +74,7 @@ jobs:
         env:
           _aegis_profile: ${{ matrix.profile }}
           # Change _use_llvm_lto from full to thin to decrease the build time on GitHub workflow
-          _use_llvm_lto: thin
+          _use_llvm_lto: full
           _processor_opt: generic
           # https://github.com/NVIDIA/open-gpu-kernel-modules/issues/439
           #_use_kcfi: ${{ matrix.profile == 'hardened' && 'yes' || 'no' }}
