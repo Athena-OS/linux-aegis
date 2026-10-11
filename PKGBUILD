@@ -117,7 +117,7 @@ makedepends=(
 )
 
 _patchsource="https://raw.githubusercontent.com/cachyos/kernel-patches/master/${_major}"
-_configsource="https://raw.githubusercontent.com/cachyos/linux-cachyos/${_major}" # REMINDER: change "master" to ${_major}
+_configsource="https://raw.githubusercontent.com/cachyos/linux-cachyos/master" # REMINDER: change "master" to ${_major}
 
 source=(
     "https://github.com/CachyOS/linux/releases/download/${_srctag}/${_srctag}.tar.gz"
