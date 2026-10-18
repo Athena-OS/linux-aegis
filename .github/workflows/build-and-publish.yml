@@ -18,13 +18,12 @@ concurrency:
 jobs:
   # ===================================================================
   # BUILD - one job per profile, in parallel.
-  # Builds and signs packages, then stages them in R2 under a per-run
-  # prefix. Deliberately does NOT touch the repo DB: that is shared
-  # mutable state and must have exactly one writer.
+  # Builds and signs packages, then hands them to the publish job as
+  # GitHub artifacts. Deliberately does NOT touch the repo DB: that is
+  # shared mutable state and must have exactly one writer.
   #
-  # Staging in R2 rather than uploading GitHub artifacts: kernel packages
-  # are large, and actions/upload-artifact bills them against the
-  # account-wide Actions storage quota. R2 is already a dependency here.
+  # Artifacts are kept for 1 day only, to limit their weight on the
+  # account-wide Actions storage quota (kernel packages are large).
   # ===================================================================
   build:
     name: linux-aegis-${{ matrix.profile }}
@@ -41,7 +40,7 @@ jobs:
       - name: Setup build environment
         run: |
           pacman-key --init
-          pacman -Syu aws-cli --noconfirm --needed
+          pacman -Syu --noconfirm --needed
           useradd builder -m
           echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
           chmod -R a+rw .
@@ -110,39 +109,25 @@ jobs:
             -exec mv {} /tmp/athena-repo/ \;
 
           echo "Built artifacts:"
-          ls -lh /tmp/athena-repo/
+          ls -lh /tmp/athena-repo
 
-      # Flat layout: package filenames already encode the profile
-      # (linux-aegis-offensive-* vs linux-aegis-hardened-*), so the two
-      # matrix legs cannot collide in the staging prefix.
-      - name: Stage packages in R2
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
-          R2_BUCKET: ${{ secrets.R2_BUCKET }}
-        run: |
-          set -euo pipefail
-          shopt -s nullglob
-          STAGING="s3://$R2_BUCKET/_staging/${{ github.run_id }}-${{ github.run_attempt }}"
-
-          FILES=(/tmp/athena-repo/*.pkg.tar.zst /tmp/athena-repo/*.pkg.tar.zst.sig)
-          if [ ${#FILES[@]} -eq 0 ]; then
-            echo "No packages produced by the ${{ matrix.profile }} build."
-            exit 1
-          fi
-
-          for f in "${FILES[@]}"; do
-            echo "Staging $(basename "$f")..."
-            aws s3 cp "$f" "$STAGING/$(basename "$f")" \
-              --endpoint-url "$R2_ENDPOINT"
-          done
+      # One artifact per profile. Package filenames already encode the
+      # profile (linux-aegis-offensive-* vs linux-aegis-hardened-*), so
+      # merging them in the publish job cannot cause collisions.
+      # compression-level 0: .pkg.tar.zst files are already compressed.
+      - name: Upload packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: packages-${{ matrix.profile }}
+          path: /tmp/athena-repo/
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
 
   # ===================================================================
   # PUBLISH - single job, runs once after ALL matrix legs succeed.
-  # Sole writer of the repo DB: pulls every profile's packages out of
-  # the staging prefix, runs repo-add ONCE with all of them, uploads,
-  # purges cache, then clears staging.
+  # Sole writer of the repo DB: downloads every profile's packages,
+  # runs repo-add ONCE with all of them, uploads, purges cache.
   # ===================================================================
   publish:
     name: Publish to R2
@@ -156,7 +141,6 @@ jobs:
       R2_BUCKET: ${{ secrets.R2_BUCKET }}
       REPO_NAME: athena
       REPO_ARCH: x86_64
-      STAGING_PREFIX: _staging/${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - name: Setup environment
         run: |
@@ -188,18 +172,17 @@ jobs:
             "gpg --batch --passphrase-fd 0 --pinentry-mode loopback \
              --sign --armor --output /dev/null /dev/null" 2>/dev/null || true
 
-      # Flattens every matrix leg's output into one dir, so /tmp/athena-repo
-      # ends up holding BOTH profiles' packages — same end state as the old
-      # download-artifact/merge-multiple step, without the storage quota.
-      - name: Fetch staged packages from R2
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/athena-repo
-          aws s3 cp --recursive \
-            "s3://$R2_BUCKET/$STAGING_PREFIX/" /tmp/athena-repo/ \
-            --endpoint-url "$R2_ENDPOINT"
-          echo "Collected packages:"
-          ls -lh /tmp/athena-repo/
+      # Merges every matrix leg's artifact into one dir, so /tmp/athena-repo
+      # ends up holding BOTH profiles' packages.
+      - name: Download packages
+        uses: actions/download-artifact@v8
+        with:
+          pattern: packages-*
+          path: /tmp/athena-repo
+          merge-multiple: true
+
+      - name: List collected packages
+        run: ls -lh /tmp/athena-repo/
 
       # ---------------------------------------------------------------
       # Download current repo DB from R2, add new packages, re-sign
@@ -238,7 +221,7 @@ jobs:
           su builder -c "repo-add --sign '$DB_PATH/$REPO_NAME.db.tar.gz' ${PKGS[*]@Q}"
 
       # ---------------------------------------------------------------
-      # Upload packages + updated DB to R2, then remove old versions
+      # Upload packages + updated DB to R2
       # ---------------------------------------------------------------
       - name: Upload to R2
         run: |
@@ -313,12 +296,3 @@ jobs:
               -H "Content-Type: application/json" \
               --data "{\"files\": $JSON_URLS}" | jq .
           done
-
-      # Runs even on failure so a broken publish doesn't leave large
-      # objects sitting in the staging prefix. Drop the `if: always()`
-      # if you'd rather keep the staged packages around for debugging.
-      - name: Clear staging prefix
-        if: always()
-        run: |
-          aws s3 rm --recursive "s3://$R2_BUCKET/$STAGING_PREFIX/" \
-            --endpoint-url "$R2_ENDPOINT" || true
