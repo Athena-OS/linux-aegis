@@ -72,7 +72,7 @@
 # Replaces nvidia-open-dkms for this kernel. The modules are built against
 # this exact kernel tree and signed with its per-build module signing key,
 # so they must always be built in the same makepkg run as the kernel.
-: "${_build_nvidia_open:=yes}"
+: "${_build_nvidia_open:=no}"
 
 ### ============================================================
 ### INTERNALS — do not modify below this line
