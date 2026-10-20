@@ -142,7 +142,8 @@ jobs:
   # ===================================================================
   # PUBLISH - single job, runs once after ALL matrix legs succeed.
   # Sole writer of the repo DB: downloads every profile's packages,
-  # runs repo-add ONCE with all of them, uploads, purges cache.
+  # runs repo-add ONCE with all of them, uploads, removes superseded
+  # versions, purges cache.
   # ===================================================================
   publish:
     name: Publish to R2
@@ -272,13 +273,52 @@ jobs:
           aws s3 cp "/tmp/athena-repo/$REPO_NAME.files.tar.gz.sig" \
             "$REMOTE_PREFIX/$REPO_NAME.files.sig" --endpoint-url "$R2_ENDPOINT"
 
-          # Old-version cleanup stays commented out, as in the original.
-          # Re-enable only after confirming the name-matching logic is correct
-          # for multi-profile packages (linux-aegis-offensive vs -hardened share
-          # a prefix, so `rev | cut -d- -f4-` may not discriminate them safely).
+      # ---------------------------------------------------------------
+      # Remove superseded versions of the packages just published
+      # ---------------------------------------------------------------
+      - name: Remove old package versions from R2
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          REMOTE_PREFIX="s3://$R2_BUCKET/$REPO_NAME/os/$REPO_ARCH"
+
+          # <pkgname>-<pkgver>-<pkgrel>-<arch>.pkg.tar.zst -> <pkgname>
+          pkgname_of() {
+            local n="${1%.pkg.tar.zst}"
+            n="${n%-*}"; n="${n%-*}"; n="${n%-*}"
+            printf '%s' "$n"
+          }
+
+          declare -A NEW_FILES NEW_NAMES
+          for f in /tmp/athena-repo/*.pkg.tar.zst; do
+            b=$(basename "$f")
+            NEW_FILES["$b"]=1
+            NEW_NAMES["$(pkgname_of "$b")"]=1
+          done
+
+          : > /tmp/deleted_urls.txt
+          # aws s3 ls paginates automatically; 4th column is the key name.
+          # Trailing '/' keeps the listing non-recursive.
+          aws s3 ls "$REMOTE_PREFIX/" --endpoint-url "$R2_ENDPOINT" \
+            | awk '{print $4}' | grep -E '\.pkg\.tar\.zst$' \
+            | while read -r remote; do
+                [ -n "$remote" ] || continue
+                # Skip anything we just uploaded.
+                [ -n "${NEW_FILES[$remote]:-}" ] && continue
+                # Only delete older versions of packages published in this run.
+                [ -n "${NEW_NAMES[$(pkgname_of "$remote")]:-}" ] || continue
+
+                echo "Removing superseded $remote"
+                aws s3 rm "$REMOTE_PREFIX/$remote" --endpoint-url "$R2_ENDPOINT"
+                aws s3 rm "$REMOTE_PREFIX/$remote.sig" --endpoint-url "$R2_ENDPOINT" || true
+                echo "$remote" >> /tmp/deleted_urls.txt
+                echo "$remote.sig" >> /tmp/deleted_urls.txt
+              done
+
+          echo "Removed $(wc -l < /tmp/deleted_urls.txt) object(s)."
 
       # ---------------------------------------------------------------
-      # Purge Cloudflare CDN cache for updated files
+      # Purge Cloudflare CDN cache for updated and removed files
       # ---------------------------------------------------------------
       - name: Purge edge cache
         env:
@@ -299,6 +339,13 @@ jobs:
                       files files.sig files.tar.gz files.tar.gz.sig; do
             URLS+=("$REPO_BASE_URL/$REPO_NAME.$name")
           done
+
+          # Files deleted from R2 in the previous step.
+          if [ -s /tmp/deleted_urls.txt ]; then
+            while read -r f; do
+              URLS+=("$REPO_BASE_URL/$f")
+            done < /tmp/deleted_urls.txt
+          fi
 
           # Cloudflare caps purge_cache at 30 URLs per call — chunk it.
           printf '%s\n' "${URLS[@]}" | split -l 30 - /tmp/purge_chunk_
