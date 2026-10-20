@@ -162,10 +162,7 @@ sha512sums=('2aec067d7a78ce8d64869649f1fe22b9aaac25c38011aae7b666f090b2fdf12356f
             'be96ac97ae6616e5dc077f91d8d015635ed7fe1b16150f8b7416e8e6d83df6b3c6c6bdefa1402de02b0a54c1dbf05191227b5c6d28bfffd93795db10728a0c98'
             'c751913df1c04f917917a72480e00b10db67c43dac644f8c6e86b0ce8ecd0995ce5995cdc3408c2e741374a18e5235bd9134dc400399ccf382035cff8fe1a7e8'
             'cc57e99e9daea96332b09d034b89dd5de1360936aae1ecb9f81b0dc553b4f5c913d5cecb778b0f652988b2564db9292bf8a7c1074ab3e61872dd75420d6b0db0'
-            '40a9bda06b17cc677ba09b238ebda6ae10f208597d84ea9801a6778e2ab35e65499bd4574e4d41e9ddc04bc1a9e5e29cea15dc3b736ba9861cc468e509cb2968'
-            '5ced2c7e3e9df21f8494ea439ac2103307fcbcb295a3f11e5fdf4f1dbeda3f0b13800a06f8147ebd064f98897c24e92f5de82023a8ca43a582694d951c9620c9'
-            '8c7852da8b9c469df3459e6a3359968c567014205e90230295cb34b9092a245df8813bee39baf042a2533134a4714e1514e20466d26d6ae0efaf75db61f8ab44'
-            'b46600adf9385d408b6a8fdd7126c1db38178ed3b9cb2e8adb500082fc724446d193b0411bb661d4fde4c26b14dc0a9ee3cf73e14a4b892787e1d367b9c4ac21')
+            '40a9bda06b17cc677ba09b238ebda6ae10f208597d84ea9801a6778e2ab35e65499bd4574e4d41e9ddc04bc1a9e5e29cea15dc3b736ba9861cc468e509cb2968')
 
 ### NVIDIA open kernel modules
 # _nv_ver must match the nvidia-utils version in the Arch repos exactly,
@@ -182,8 +179,9 @@ if [ "$_build_nvidia_open" = "yes" ]; then
         "${_nv_patches[0]}::${_patchsource}/misc/nvidia/0002-fix-dsc-correct-RC-parameter-tables-to-match-VESA-DS.patch"
         "${_nv_patches[1]}::${_patchsource}/misc/nvidia/0003-fix-dp-add-Bigscreen-Beyond-VR-headset-to-WAR-databa.patch"
     )
-    # TODO: replace SKIP with the tarball's sha512sum on the next bump:
-    #   curl -sL https://download.nvidia.com/XFree86/NVIDIA-kernel-module-source/${_nv_open_pkg}.tar.xz | sha512sum
+    sha512sums+=('5ced2c7e3e9df21f8494ea439ac2103307fcbcb295a3f11e5fdf4f1dbeda3f0b13800a06f8147ebd064f98897c24e92f5de82023a8ca43a582694d951c9620c9'
+                 '8c7852da8b9c469df3459e6a3359968c567014205e90230295cb34b9092a245df8813bee39baf042a2533134a4714e1514e20466d26d6ae0efaf75db61f8ab44'
+                 'b46600adf9385d408b6a8fdd7126c1db38178ed3b9cb2e8adb500082fc724446d193b0411bb661d4fde4c26b14dc0a9ee3cf73e14a4b892787e1d367b9c4ac21')
 fi
 
 export KBUILD_BUILD_HOST=athenaos
