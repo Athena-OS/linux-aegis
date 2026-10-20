@@ -2,6 +2,10 @@ name: Build and Publish
 
 on:
   push:
+    # Only main publishes. Pushes to other branches (PRs, experiments) never
+    # build or touch the live repo; use workflow_dispatch to test a branch.
+    branches:
+      - main
     paths:
       - 'PKGBUILD'
   workflow_dispatch:
@@ -21,6 +25,14 @@ jobs:
   # Builds and signs packages, then hands them to the publish job as
   # GitHub artifacts. Deliberately does NOT touch the repo DB: that is
   # shared mutable state and must have exactly one writer.
+  #
+  # Each leg produces three packages for its profile:
+  #   linux-aegis-<profile>, -headers, -nvidia-open
+  # The NVIDIA modules are built in the SAME leg as their kernel, right
+  # after it: they must be compiled against that exact tree and signed with
+  # the module-signing key generated during that kernel build. Built in a
+  # separate job, they would carry a different signature and be refused
+  # under lockdown / Secure Boot.
   #
   # Artifacts are kept for 1 day only, to limit their weight on the
   # account-wide Actions storage quota (kernel packages are large).
@@ -78,6 +90,8 @@ jobs:
           # https://github.com/NVIDIA/open-gpu-kernel-modules/issues/439
           #_use_kcfi: ${{ matrix.profile == 'hardened' && 'yes' || 'no' }}
           _use_kcfi: no
+          # Adds the linux-aegis-<profile>-nvidia-open package to this leg.
+          _build_nvidia_open: "yes"
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           # Only needed if PKGBUILD's source=() pulls a private Athena-OS repo.
           # sudo -E preserves these, so the step env is enough here.
@@ -111,9 +125,10 @@ jobs:
           echo "Built artifacts:"
           ls -lh /tmp/athena-repo
 
-      # One artifact per profile. Package filenames already encode the
-      # profile (linux-aegis-offensive-* vs linux-aegis-hardened-*), so
-      # merging them in the publish job cannot cause collisions.
+      # One artifact per profile (kernel + headers + nvidia-open). Package
+      # filenames already encode the profile (linux-aegis-offensive-* vs
+      # linux-aegis-hardened-*), so merging them in the publish job cannot
+      # cause collisions.
       # compression-level 0: .pkg.tar.zst files are already compressed.
       - name: Upload packages
         uses: actions/upload-artifact@v7
