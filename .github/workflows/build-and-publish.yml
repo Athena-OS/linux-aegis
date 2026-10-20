@@ -206,7 +206,7 @@ jobs:
         run: |
           set -euo pipefail
           DB_PATH="/tmp/athena-repo"
-          REMOTE_PREFIX="s3://$R2_BUCKET/$REPO_NAME/$REPO_ARCH"
+          REMOTE_PREFIX="s3://$R2_BUCKET/$REPO_NAME/os/$REPO_ARCH"
 
           # Pull the existing DB (absent on first run)
           aws s3 cp "$REMOTE_PREFIX/$REPO_NAME.db.tar.gz" "$DB_PATH/$REPO_NAME.db.tar.gz" \
@@ -241,7 +241,7 @@ jobs:
       - name: Upload to R2
         run: |
           set -euo pipefail
-          REMOTE_PREFIX="s3://$R2_BUCKET/$REPO_NAME/$REPO_ARCH"
+          REMOTE_PREFIX="s3://$R2_BUCKET/$REPO_NAME/os/$REPO_ARCH"
           shopt -s nullglob
 
           # Packages and their signatures
@@ -287,7 +287,7 @@ jobs:
         run: |
           set -euo pipefail
           shopt -s nullglob
-          REPO_BASE_URL="https://hub.athenaos.org/$REPO_NAME/$REPO_ARCH"
+          REPO_BASE_URL="https://hub.athenaos.org/$REPO_NAME/os/$REPO_ARCH"
           URLS=()
 
           for f in /tmp/athena-repo/*.pkg.tar.zst \
