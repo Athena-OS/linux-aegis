@@ -91,7 +91,7 @@ jobs:
           #_use_kcfi: ${{ matrix.profile == 'hardened' && 'yes' || 'no' }}
           _use_kcfi: no
           # Adds the linux-aegis-<profile>-nvidia-open package to this leg.
-          _build_nvidia_open: "yes"
+          _build_nvidia_open: yes
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           # Only needed if PKGBUILD's source=() pulls a private Athena-OS repo.
           # sudo -E preserves these, so the step env is enough here.
