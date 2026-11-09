@@ -106,10 +106,10 @@ if [ "$_build_nvidia_open" = "yes" ]; then
 fi
 
 _major=7.2
-_minor=9
-_tagrel=2
+_minor=11
+_tagrel=1
 pkgver=${_major}.${_minor}
-pkgrel=3
+pkgrel=2
 
 _srctag=cachyos-${_major}.${_minor}-${_tagrel}
 _srcname=${_srctag}
