@@ -109,7 +109,7 @@ _major=7.2
 _minor=11
 _tagrel=1
 pkgver=${_major}.${_minor}
-pkgrel=2
+pkgrel=3
 
 _srctag=cachyos-${_major}.${_minor}-${_tagrel}
 _srcname=${_srctag}
@@ -167,7 +167,7 @@ sha512sums=('2aec067d7a78ce8d64869649f1fe22b9aaac25c38011aae7b666f090b2fdf12356f
 ### NVIDIA open kernel modules
 # _nv_ver must match the nvidia-utils version in the Arch repos exactly,
 # because the -nvidia-open package depends on nvidia-utils=${_nv_ver}.
-_nv_ver=615.78.08
+_nv_ver=620.73.04
 _nv_open_pkg="NVIDIA-kernel-module-source-${_nv_ver}"
 _nv_patches=(
     nvidia-0002-fix-dsc-rc-parameter-tables.patch
